@@ -1,5 +1,5 @@
 # Using this as the base image
-FROM drogonframework/drogon::latest
+FROM drogonframework/drogon:latest
 
 # Copying all project files to the container's /usr/src/drogo directory
 COPY . /usr/src/drogo
