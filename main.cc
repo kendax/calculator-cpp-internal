@@ -552,6 +552,7 @@ int main()
                                 secondLastElement = input.size() - 2;
                             }
 
+                            bool secondLastMultiply = false;
                             
 
                             //If the period button has been clicked and there is no number preceeding it, append a zero before the period
