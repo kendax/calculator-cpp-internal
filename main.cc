@@ -563,11 +563,12 @@ int main()
                                 input.push_back("0");
                             }
 
-                            if (lastElement == "Invalid expression" || lastElement == "Error") { // if "Invalid expression" or "Error" is being shown and another button is clicked, first clear the input box
+                            
+
+                            //In the case that the program was expecting a negative number as the first operand but other operators are provided instead, clear the input box
+                            if (lastElement == "-" && input.size() == 1 && (key == "divide" || key == "multiply" || key == "add")) {
                                 input.clear();
                             }
-
-                            
 
                             if ((key == "divide" || key == "multiply" || key == "add") && input.size() < 1 ) {/*Prohibit an operator
                                 being provided as the first value in the input box*/
