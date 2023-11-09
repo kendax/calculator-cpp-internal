@@ -471,6 +471,13 @@ int main()
                                 req->session()->insert("resultDisplayed", true);
                             }
                         } else if (key == "equals") { //if the equals button has been clicked
+                                    //if the input box is empty redirect back to the html page
+                                    if (input.empty()) {
+                                        auto resp = HttpResponse::newRedirectionResponse("/");
+                                        callback(resp);
+                                        return;
+                                    }
+
                                     if (isSpecialCharacter(input.back())) {
                                         input.clear();
                                         input.push_back("Error");
@@ -482,13 +489,6 @@ int main()
                                     std::string inputConv;
                                     for (const std::string& str : input) { // convert the vector to a string
                                         inputConv += str;
-                                    }
-
-                                    //if the input box is empty redirect back to the html page
-                                    if (inputConv == "") {
-                                        auto resp = HttpResponse::newRedirectionResponse("/");
-                                        callback(resp);
-                                        return;
                                     }
 
                                     std::string currentValueSpc = addWhitespaceAroundOperators(inputConv);
