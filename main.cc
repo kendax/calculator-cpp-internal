@@ -567,12 +567,38 @@ int main()
                                 input.clear();
                             }
 
-                            //In the case that the program was expecting a negative number as the first operand but other operators are provided instead, clear the input box
-                            if (lastElement == "-" && input.size() == 1 && (key == "divide" || key == "multiply" || key == "add")) {
-                                input.clear();
-                            }
-
                             
+
+                            if ((key == "divide" || key == "multiply" || key == "add") && input.size() < 1 ) {/*Prohibit an operator
+                                being provided as the first value in the input box*/
+                                input.clear();
+                            } else if (lastElement == "*" && value == "-") { //Allow the minus operator to follow the multiplication operator
+                                req->session()->insert("multiAndMinus", true);
+                                input.push_back(value);
+                            } else if (secondLastMultiply && lastElement == "-" && (key == "divide" || key == "multiply" || key == "add")) { /*If any operator comes immediately after
+                                a multiplication sign and a minus sign, remove the latter two and insert that operator into the input box */
+                                if (input.size() >= 2) {
+                                    //input.assign(input.begin(), input.begin()+ input.size()-2);
+                                    input.pop_back();
+                                    input.pop_back();
+                                    input.push_back(value);
+                                }
+                            } else if ((key == "divide" || key == "multiply" || key == "add" || key == "minus") && lastElementOperator) { //Prevent two operators from following each other
+                                    if (input.size() > 0) {
+                                        input.assign(input.begin(), input.begin() + input.size() - 1);
+                                    }
+                                    input.push_back(value);
+                            } else if (req->getSession()->get<bool>("resultDisplayed") == true) { /*If any number is clicked while the input box is displaying an
+                                    answer, erase and start inserting values afresh */
+                                    input.clear();
+                                    input.push_back(value);
+                                    req->session()->erase("resultDisplayed");
+                                    req->session()->insert("resultDisplayed", false);
+                            } else if (((periodInInputFunc(input) && !foundOperatorFunc(input)) || periodInLastOperand(input)) && key == "period") { //Prevent any operand from having more than one period
+                                    input = input;
+                            } else { //Add the value of the clicked button to the input array
+                                    input.push_back(value);
+                            }
                             
                            
                     }
