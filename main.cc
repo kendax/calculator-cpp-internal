@@ -558,12 +558,11 @@ int main()
                                 secondLastMultiply = true;
                             }
 
-                            //If the period button has been clicked and there is no number preceeding it, append a zero before the period
-                            if (key == "period" && (input.size() < 1 || lastElementOperator)) {
-                                input.push_back("0");
-                            }
-
                             
+
+                            if (lastElement == "Invalid expression" || lastElement == "Error") { // if "Invalid expression" or "Error" is being shown and another button is clicked, first clear the input box
+                                input.clear();
+                            }
 
                             //In the case that the program was expecting a negative number as the first operand but other operators are provided instead, clear the input box
                             if (lastElement == "-" && input.size() == 1 && (key == "divide" || key == "multiply" || key == "add")) {
