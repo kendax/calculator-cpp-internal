@@ -547,7 +547,32 @@ int main()
                                 if (isSpecialCharacter(lastElement)) { // check if the last element in the input vector is an operator
                                     lastElementOperator = true;
                                 }
+                            } 
+                            if (input.size() > 2) { //get the index of the second last element
+                                secondLastElement = input.size() - 2;
                             }
+
+                            bool secondLastMultiply = false;
+                            //check if the second last element is a multiplication symbol
+                            if ((secondLastElement != 0) && (input[secondLastElement] == "*")) {
+                                secondLastMultiply = true;
+                            }
+
+                            //If the period button has been clicked and there is no number preceeding it, append a zero before the period
+                            if (key == "period" && (input.size() < 1 || lastElementOperator)) {
+                                input.push_back("0");
+                            }
+
+                            if (lastElement == "Invalid expression" || lastElement == "Error") { // if "Invalid expression" or "Error" is being shown and another button is clicked, first clear the input box
+                                input.clear();
+                            }
+
+                            //In the case that the program was expecting a negative number as the first operand but other operators are provided instead, clear the input box
+                            if (lastElement == "-" && input.size() == 1 && (key == "divide" || key == "multiply" || key == "add")) {
+                                input.clear();
+                            }
+
+                            
                             
                            
                     }
