@@ -547,7 +547,8 @@ int main()
                                 if (isSpecialCharacter(lastElement)) { // check if the last element in the input vector is an operator
                                     lastElementOperator = true;
                                 }
-                            } 
+                            }
+                            
                             if (input.size() > 2) { //get the index of the second last element
                                 secondLastElement = input.size() - 2;
                             }
@@ -602,8 +603,6 @@ int main()
                             } else { //Add the value of the clicked button to the input array
                                     input.push_back(value);
                             }
-                            
-                           
                     }
                 }
                 // redirect to the root url
