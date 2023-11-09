@@ -552,9 +552,9 @@ int main()
                                 secondLastElement = input.size() - 2;
                             }
 
-                            bool secondLastMultiply;
+                            bool secondLastMultiply = false;
                             //check if the second last element is a multiplication symbol
-                            if ((secondLastElement != 0) && (input[secondLastElement] == "*")) {
+                            if (secondLastElement != 0 && input[secondLastElement] == "*") {
                                 secondLastMultiply = true;
                             }
 
