@@ -555,7 +555,8 @@ int main()
                             bool secondLastMultiply = false;
                             //check if the second last element is a multiplication symbol
                             if (secondLastElement != 0 && input[secondLastElement] == "*") {
-                                secondLastMultiply = true;
+                                //secondLastMultiply = true;
+                                int a = 2;
                             }
 
                             //If the period button has been clicked and there is no number preceeding it, append a zero before the period
