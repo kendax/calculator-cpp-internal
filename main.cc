@@ -477,7 +477,8 @@ int main()
                                         callback(resp);
                                         return;
                                     }
-
+                                    
+                                    //If the expression ends with an operator display an 'Error' message in the input box
                                     if (isSpecialCharacter(input.back())) {
                                         input.clear();
                                         input.push_back("Error");
@@ -617,7 +618,7 @@ int main()
                     // redirect to the root url
                     auto resp = HttpResponse::newRedirectionResponse("/");
                     callback(resp);
-                } catch (...) {
+                } catch (...) { //Catch any previously unhandled exceptions
                     std::cerr << "Caught exception in '/postinput'" << std::endl;
                     input.clear();
                     input.push_back("Error");
