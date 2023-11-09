@@ -541,7 +541,7 @@ int main()
                             req->session()->insert("isOperator", false);
                     } else { // for any other button clicked
                             std::string lastElement;
-                            int secondLastElement;
+                            int secondLastElement = -1;
                             if (input.size() > 0) {
                                 lastElement = input.back(); //get the last element in the input vector
                                 if (isSpecialCharacter(lastElement)) { // check if the last element in the input vector is an operator
@@ -554,9 +554,8 @@ int main()
 
                             bool secondLastMultiply = false;
                             //check if the second last element is a multiplication symbol
-                            if (secondLastElement != 0 && input[secondLastElement] == "*") {
-                                //secondLastMultiply = true;
-                                int a = 2;
+                            if (secondLastElement != -1 && input[secondLastElement] == "*") {
+                                secondLastMultiply = true;
                             }
 
                             //If the period button has been clicked and there is no number preceeding it, append a zero before the period
