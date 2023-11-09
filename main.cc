@@ -552,13 +552,12 @@ int main()
                                 secondLastElement = input.size() - 2;
                             }
 
-                            bool secondLastMultiply = false;
-                            //check if the second last element is a multiplication symbol
-                            if ((secondLastElement != 0) && (input[secondLastElement] == "*")) {
-                                secondLastMultiply = true;
-                            }
-
                             
+
+                            //If the period button has been clicked and there is no number preceeding it, append a zero before the period
+                            if (key == "period" && (input.size() < 1 || lastElementOperator)) {
+                                input.push_back("0");
+                            }
 
                             if (lastElement == "Invalid expression" || lastElement == "Error") { // if "Invalid expression" or "Error" is being shown and another button is clicked, first clear the input box
                                 input.clear();
