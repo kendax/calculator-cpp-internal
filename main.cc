@@ -259,218 +259,218 @@ std::vector<std::string> input;
 
 int main()
 {
-    //Handle displaying of dynamic data in the HTML template
-    app().registerHandler(
-        "/",
-        [](const HttpRequestPtr &req,
-            std::function<void(const HttpResponsePtr &)> &&callback) {
-                /*Create a dataset called 'data' using the class "HttpViewData" and insert into it the values that will
-                be displayed in the html input box in the html template */
-                HttpViewData data;
-                data.insert("input", getInputAsString(input));
+    try{
+        //Handle displaying of dynamic data in the HTML template
+        app().registerHandler(
+            "/",
+            [](const HttpRequestPtr &req,
+                std::function<void(const HttpResponsePtr &)> &&callback) {
+                    /*Create a dataset called 'data' using the class "HttpViewData" and insert into it the values that will
+                    be displayed in the html input box in the html template */
+                    HttpViewData data;
+                    data.insert("input", getInputAsString(input));
 
-                // Go to the html template along with the dataset
-                auto resp = HttpResponse::newHttpViewResponse("/Template.csp", data);
-                callback(resp);
-            },
-            {Get}); //Using GET method for this function
-    
-    app().registerHandler(
-        "/postinput",
-         [](const HttpRequestPtr &req,
-            std::function<void(const HttpResponsePtr &)> &&callback) {
-                const auto &formParams = req->getParameters(); //Get all the parameters of the buttons in the form
-                std::string equals = req->getParameter("equals");
-                req->session()->insert("isOperator", false);
-                std::string pattern = "([*\\-|+|/|\\(|\\)])"; // Define the regular expression pattern
-                std::regex operatorPattern(pattern); //compile the regular expression
-                bool foundOperator;
-                int operatorPosition = -1;
-                bool lastElementOperator;
-                //Check if there is an operator in the input vector and get its position
-                for (int index = 0; index < input.size(); ++index) {
-                    const std::string& item = input[index];
-                    //Check if there is an operator in the input box and if present get its position
-                    if (std::regex_search(item, operatorPattern)) {
-                        operatorPosition = index;
-                    }
-                }
-
-                //Loop over every button clicked on the html page
-                for (const auto &param : formParams) {
-                    const std::string &key = param.first; //assign the first bit of every button's parameters to a constant reference and call it key
-                    const std::string &value = param.second; //assign the second bit of every button's parameters to a constant reference and call it value
-                    //Check if the button pressed is an operator
-                    bool valueIsOperator = std::regex_search(value, operatorPattern);
-                    //Check if the button pressed is an operator and the input box was already showing a result
-                    if ((key == "divide" || key == "multiply" || key == "minus" || key == "add") && req->getSession()->get<bool>("resultDisplayed") == true) {
-                        req->session()->erase("isOperator");
-                        req->session()->insert("isOperator", true);
-                        req->session()->erase("resultDisplayed");
-                        req->session()->insert("resultDisplayed", false); // negate this session variable
+                    // Go to the html template along with the dataset
+                    auto resp = HttpResponse::newHttpViewResponse("/Template.csp", data);
+                    callback(resp);
+                },
+                {Get}); //Using GET method for this function
+        
+        app().registerHandler(
+            "/postinput",
+            [](const HttpRequestPtr &req,
+                std::function<void(const HttpResponsePtr &)> &&callback) {
+                    const auto &formParams = req->getParameters(); //Get all the parameters of the buttons in the form
+                    std::string equals = req->getParameter("equals");
+                    req->session()->insert("isOperator", false);
+                    std::string pattern = "([*\\-|+|/|\\(|\\)])"; // Define the regular expression pattern
+                    std::regex operatorPattern(pattern); //compile the regular expression
+                    bool foundOperator;
+                    int operatorPosition = -1;
+                    bool lastElementOperator;
+                    //Check if there is an operator in the input vector and get its position
+                    for (int index = 0; index < input.size(); ++index) {
+                        const std::string& item = input[index];
+                        //Check if there is an operator in the input box and if present get its position
+                        if (std::regex_search(item, operatorPattern)) {
+                            operatorPosition = index;
+                        }
                     }
 
-                    //If the percentage key has been clicked
-                    if (key == "modulus") {
-                        int indexToSlice = operatorPosition + 1;
-
-                        //if the input vector is empty redirect to the html page and show an empty input box
-                        if (input.size() == 0) {
-                            input.clear();
-                            auto resp = HttpResponse::newRedirectionResponse("/");
-                            callback(resp);
-                        }
-                        // slice the input vector from just after the operator till the end to obtain the last operand
-                        std::vector<std::string> slicedInput(input.begin() + indexToSlice, input.end());
-
-                        //convert the vector to a string
-                        std::string implodeToPercentage;
-                        for (const std::string& str : slicedInput) {
-                            implodeToPercentage += str;
+                    //Loop over every button clicked on the html page
+                    for (const auto &param : formParams) {
+                        const std::string &key = param.first; //assign the first bit of every button's parameters to a constant reference and call it key
+                        const std::string &value = param.second; //assign the second bit of every button's parameters to a constant reference and call it value
+                        //Check if the button pressed is an operator
+                        bool valueIsOperator = std::regex_search(value, operatorPattern);
+                        //Check if the button pressed is an operator and the input box was already showing a result
+                        if ((key == "divide" || key == "multiply" || key == "minus" || key == "add") && req->getSession()->get<bool>("resultDisplayed") == true) {
+                            req->session()->erase("isOperator");
+                            req->session()->insert("isOperator", true);
+                            req->session()->erase("resultDisplayed");
+                            req->session()->insert("resultDisplayed", false); // negate this session variable
                         }
 
-                        double toPercentage;
-                        // attempt to convert the string to a double and catch any errors
-                        try {
-                            toPercentage = std::stod(implodeToPercentage);
-                        } catch (const std::invalid_argument& e) {
-                            std::cerr << "Invalid argument: " << e.what() << std::endl;
-                            input.clear();
-                            input.push_back("Error");
-                            auto resp = HttpResponse::newRedirectionResponse("/");
-                            callback(resp);
-                            return;
-                        } catch (const std::out_of_range& e) {
-                            std::cerr << "Out of range: " << e.what() << std::endl;
-                            input.clear();
-                            input.push_back("Error");
-                            auto resp = HttpResponse::newRedirectionResponse("/");
-                            callback(resp);
-                            return;
-                        }
+                        //If the percentage key has been clicked
+                        if (key == "modulus") {
+                            int indexToSlice = operatorPosition + 1;
 
-                        toPercentage /= 100; // divide the last operand by 100  to get its value as a percentage
-                        std::vector<std::string> operandWithoutModulus;
-                        // slice the input vector upto and including the operator
-                        if (indexToSlice > 0) {
-                            operandWithoutModulus.assign(input.begin(), input.begin() + indexToSlice);
-                        }
-
-                        std::string firstPattern = "([*\\-+*/()])"; //pattern for a plus or minus
-                        std::regex firstOperatorPattern(firstPattern);
-                        std::string secondPattern = "([*/()])"; // pattern for division or multiplication
-                        std::regex secondOperatorPattern(secondPattern);
-                        bool plusInInput = false, divisionInInput = false, negativeInInput = false;
-                        //loop over the input vector as "elements"
-                        for (const std::string& element : input) {
-                            if (req->getSession()->get<bool>("multiAndMinus") == true) {
-                                negativeInInput = true;
-                            } else if (std::regex_search(element, secondOperatorPattern)) {
-                                divisionInInput = true;
-                            } else if (std::regex_search(element, firstOperatorPattern)) {
-                                plusInInput = true;
+                            //if the input vector is empty redirect to the html page and show an empty input box
+                            if (input.size() == 0) {
+                                input.clear();
+                                auto resp = HttpResponse::newRedirectionResponse("/");
+                                callback(resp);
                             }
-                        }
+                            // slice the input vector from just after the operator till the end to obtain the last operand
+                            std::vector<std::string> slicedInput(input.begin() + indexToSlice, input.end());
 
-                        if (plusInInput) { // if the modulus expression contains a plus or minus
-                            std::vector<std::string> operandWithoutOperator(input.begin(), input.begin() + indexToSlice);
-                            std::string implodedOperandStr;
-                            for (const std::string& str : operandWithoutOperator) {
-                                implodedOperandStr += str;
+                            //convert the vector to a string
+                            std::string implodeToPercentage;
+                            for (const std::string& str : slicedInput) {
+                                implodeToPercentage += str;
                             }
 
-                            double implodedOperand;
+                            double toPercentage;
+                            // attempt to convert the string to a double and catch any errors
                             try {
-                                implodedOperand = std::stod(implodedOperandStr);
+                                toPercentage = std::stod(implodeToPercentage);
                             } catch (const std::invalid_argument& e) {
                                 std::cerr << "Invalid argument: " << e.what() << std::endl;
                                 input.clear();
                                 input.push_back("Error");
                                 auto resp = HttpResponse::newRedirectionResponse("/");
                                 callback(resp);
+                                return;
                             } catch (const std::out_of_range& e) {
                                 std::cerr << "Out of range: " << e.what() << std::endl;
                                 input.clear();
                                 input.push_back("Error");
                                 auto resp = HttpResponse::newRedirectionResponse("/");
                                 callback(resp);
+                                return;
                             }
 
-                            double operandWithModulus = implodedOperand * toPercentage;
-                            operandWithoutModulus.push_back(std::to_string(operandWithModulus));
-                            std::string operandWithoutModulusStr;
-                            for (const std::string &str : operandWithoutModulus) {
-                                operandWithoutModulusStr += str;
+                            toPercentage /= 100; // divide the last operand by 100  to get its value as a percentage
+                            std::vector<std::string> operandWithoutModulus;
+                            // slice the input vector upto and including the operator
+                            if (indexToSlice > 0) {
+                                operandWithoutModulus.assign(input.begin(), input.begin() + indexToSlice);
                             }
 
-                            std::string currentValueSpc = addWhitespaceAroundOperators(operandWithoutModulusStr);
-                            std::pair<double, std::string> currentValuePair = calculateInput(currentValueSpc);
-                            double currentValue;
-                            if (currentValuePair.second.empty()) {
-                                currentValue = currentValuePair.first;
-                                std::cout << "Result: " << currentValuePair.first << std::endl;
-                            } else {
-                                std::cerr << currentValuePair.second << std::endl;
+                            std::string firstPattern = "([*\\-+*/()])"; //pattern for a plus or minus
+                            std::regex firstOperatorPattern(firstPattern);
+                            std::string secondPattern = "([*/()])"; // pattern for division or multiplication
+                            std::regex secondOperatorPattern(secondPattern);
+                            bool plusInInput = false, divisionInInput = false, negativeInInput = false;
+                            //loop over the input vector as "elements"
+                            for (const std::string& element : input) {
+                                if (req->getSession()->get<bool>("multiAndMinus") == true) {
+                                    negativeInInput = true;
+                                } else if (std::regex_search(element, secondOperatorPattern)) {
+                                    divisionInInput = true;
+                                } else if (std::regex_search(element, firstOperatorPattern)) {
+                                    plusInInput = true;
+                                }
                             }
 
-                            input.clear();
-                            input.push_back(removeTrailingZeros(currentValue));
-                            req->session()->erase("resultDisplayed");
-                            req->session()->insert("resultDisplayed", true);
-                        } else if (divisionInInput) { //if the modulus expression contains a multiplication or division symbol
-                            operandWithoutModulus.push_back(std::to_string(toPercentage));
-                            std::string operandWithoutModulusStr;
-                            for (const std::string & str : operandWithoutModulus) {
-                                operandWithoutModulusStr += str;
-                            }
+                            if (plusInInput) { // if the modulus expression contains a plus or minus
+                                std::vector<std::string> operandWithoutOperator(input.begin(), input.begin() + indexToSlice);
+                                std::string implodedOperandStr;
+                                for (const std::string& str : operandWithoutOperator) {
+                                    implodedOperandStr += str;
+                                }
 
-                            std::string currentValueSpc = addWhitespaceAroundOperators(operandWithoutModulusStr);
-                            std::pair<double, std::string> currentValuePair = calculateInput(currentValueSpc);
-                            double currentValue;
-                            if (currentValuePair.second.empty()) {
-                                currentValue = currentValuePair.first;
-                                std::cout << "Result: " << currentValuePair.first << std::endl;
-                            } else {
-                                std::cerr << currentValuePair.second << std::endl;
-                            }
+                                double implodedOperand;
+                                try {
+                                    implodedOperand = std::stod(implodedOperandStr);
+                                } catch (const std::invalid_argument& e) {
+                                    std::cerr << "Invalid argument: " << e.what() << std::endl;
+                                    input.clear();
+                                    input.push_back("Error");
+                                    auto resp = HttpResponse::newRedirectionResponse("/");
+                                    callback(resp);
+                                } catch (const std::out_of_range& e) {
+                                    std::cerr << "Out of range: " << e.what() << std::endl;
+                                    input.clear();
+                                    input.push_back("Error");
+                                    auto resp = HttpResponse::newRedirectionResponse("/");
+                                    callback(resp);
+                                }
 
-                            input.clear();
-                            input.push_back(removeTrailingZeros(currentValue));
-                            req->session()->erase("resultDisplayed");
-                            req->session()->insert("resultDisplayed", true);
-                        } else if (negativeInInput) { // if the modulus expression contains a multiplication sign followed by a minus sign
-                            operandWithoutModulus.push_back(std::to_string(toPercentage));
-                            std::string operandWithoutModulusStr;
-                            for (const std::string& str : operandWithoutModulus) {
-                                operandWithoutModulusStr += str;
-                            }
+                                double operandWithModulus = implodedOperand * toPercentage;
+                                operandWithoutModulus.push_back(std::to_string(operandWithModulus));
+                                std::string operandWithoutModulusStr;
+                                for (const std::string &str : operandWithoutModulus) {
+                                    operandWithoutModulusStr += str;
+                                }
 
-                            std::string currentValueSpc = addWhitespaceAroundOperators(operandWithoutModulusStr);
-                            std::pair<double, std::string> currentValuePair = calculateInput(currentValueSpc);
-                            double currentValue;
-                            if (currentValuePair.second.empty()) {
-                                currentValue = currentValuePair.first;
-                                std::cout << "Result: " << currentValuePair.first << std::endl;
-                            } else {
-                                std::cerr << currentValuePair.second << std::endl;
-                            }
+                                std::string currentValueSpc = addWhitespaceAroundOperators(operandWithoutModulusStr);
+                                std::pair<double, std::string> currentValuePair = calculateInput(currentValueSpc);
+                                double currentValue;
+                                if (currentValuePair.second.empty()) {
+                                    currentValue = currentValuePair.first;
+                                    std::cout << "Result: " << currentValuePair.first << std::endl;
+                                } else {
+                                    std::cerr << currentValuePair.second << std::endl;
+                                }
 
-                            input.clear();
-                            input.push_back(removeTrailingZeros(currentValue));
-                            req->session()->erase("resultDisplayed");
-                            req->session()->insert("resultDisplayed", true);
-                            req->session()->erase("multiAndMinus");
-                            req->session()->insert("multiAndMinus", false);
-                        } else { // if the modulus expression has no expression and is just a number
-                            double currentValueFlt = std::stod(getInputAsString(input));
-                            currentValueFlt /= 100;
-                            input.clear();
-                            input.push_back(removeTrailingZeros(currentValueFlt));
-                            req->session()->erase("resultDisplayed");
-                            req->session()->insert("resultDisplayed", true);
-                        }
-                    } else if (key == "equals") { //if the equals button has been clicked
-                            try {
+                                input.clear();
+                                input.push_back(removeTrailingZeros(currentValue));
+                                req->session()->erase("resultDisplayed");
+                                req->session()->insert("resultDisplayed", true);
+                            } else if (divisionInInput) { //if the modulus expression contains a multiplication or division symbol
+                                operandWithoutModulus.push_back(std::to_string(toPercentage));
+                                std::string operandWithoutModulusStr;
+                                for (const std::string & str : operandWithoutModulus) {
+                                    operandWithoutModulusStr += str;
+                                }
+
+                                std::string currentValueSpc = addWhitespaceAroundOperators(operandWithoutModulusStr);
+                                std::pair<double, std::string> currentValuePair = calculateInput(currentValueSpc);
+                                double currentValue;
+                                if (currentValuePair.second.empty()) {
+                                    currentValue = currentValuePair.first;
+                                    std::cout << "Result: " << currentValuePair.first << std::endl;
+                                } else {
+                                    std::cerr << currentValuePair.second << std::endl;
+                                }
+
+                                input.clear();
+                                input.push_back(removeTrailingZeros(currentValue));
+                                req->session()->erase("resultDisplayed");
+                                req->session()->insert("resultDisplayed", true);
+                            } else if (negativeInInput) { // if the modulus expression contains a multiplication sign followed by a minus sign
+                                operandWithoutModulus.push_back(std::to_string(toPercentage));
+                                std::string operandWithoutModulusStr;
+                                for (const std::string& str : operandWithoutModulus) {
+                                    operandWithoutModulusStr += str;
+                                }
+
+                                std::string currentValueSpc = addWhitespaceAroundOperators(operandWithoutModulusStr);
+                                std::pair<double, std::string> currentValuePair = calculateInput(currentValueSpc);
+                                double currentValue;
+                                if (currentValuePair.second.empty()) {
+                                    currentValue = currentValuePair.first;
+                                    std::cout << "Result: " << currentValuePair.first << std::endl;
+                                } else {
+                                    std::cerr << currentValuePair.second << std::endl;
+                                }
+
+                                input.clear();
+                                input.push_back(removeTrailingZeros(currentValue));
+                                req->session()->erase("resultDisplayed");
+                                req->session()->insert("resultDisplayed", true);
+                                req->session()->erase("multiAndMinus");
+                                req->session()->insert("multiAndMinus", false);
+                            } else { // if the modulus expression has no expression and is just a number
+                                double currentValueFlt = std::stod(getInputAsString(input));
+                                currentValueFlt /= 100;
+                                input.clear();
+                                input.push_back(removeTrailingZeros(currentValueFlt));
+                                req->session()->erase("resultDisplayed");
+                                req->session()->insert("resultDisplayed", true);
+                            }
+                        } else if (key == "equals") { //if the equals button has been clicked
                                 std::string inputConv;
                                 for (const std::string& str : input) { // convert the vector to a string
                                     inputConv += str;
@@ -515,117 +515,117 @@ int main()
                                 req->session()->insert("resultDisplayed", true);
                                 req->session()->erase("isOperator");
                                 req->session()->insert("isOperator", false);
-                            } catch (const std::exception& e) {
-                                std::cerr << "Caught exception: " << e.what() << std::endl;
+                        } else if (key == "c") { // if the C button is clicked
                                 input.clear();
-                                input.push_back("Error");
-                                auto resp = HttpResponse::newRedirectionResponse("/");
-                                callback(resp);
-                                return;
-                            }
-                    } else if (key == "c") { // if the C button is clicked
-                            input.clear();
-                            if (lastElementOperator == true) {
-                                lastElementOperator = false;
-                            }
-
-                            req->session()->erase("resultDisplayed");
-                            req->session()->insert("resultDisplayed", false);
-                            req->session()->erase("isOperator");
-                            req->session()->insert("isOperator", false);
-                            req->session()->erase("multiAndMinus");
-                    } else if (key == "delete") { // if the delete button has been clicked
-                            if (input.size() > 0) {
-                                if (lastElementOperator) {
+                                if (lastElementOperator == true) {
                                     lastElementOperator = false;
                                 }
-                                if (lastElementOperator && req->getSession()->get<bool>("multiAndMinus") == true) {
-                                    req->session()->erase("multiAndMinus");
-                                }
-                                input.pop_back();
-                            }
-                            req->session()->erase("resultDisplayed");
-                            req->session()->insert("resultDisplayed", false);
-                            req->session()->erase("isOperator");
-                            req->session()->insert("isOperator", false);
-                    } else { // for any other button clicked
-                            std::string lastElement;
-                            int secondLastElement = -1;
-                            if (input.size() > 0) {
-                                lastElement = input.back(); //get the last element in the input vector
-                                if (isSpecialCharacter(lastElement)) { // check if the last element in the input vector is an operator
-                                    lastElementOperator = true;
-                                }
-                            }
-                            
-                            if (input.size() > 2) { //get the index of the second last element
-                                secondLastElement = input.size() - 2;
-                            }
 
-                            bool secondLastMultiply = false;
-                            //check if the second last element is a multiplication symbol
-                            if (secondLastElement != -1 && input[secondLastElement] == "*") {
-                                secondLastMultiply = true;
-                            }
-
-                            //If the period button has been clicked and there is no number preceeding it, append a zero before the period
-                            if (key == "period" && (input.size() < 1 || lastElementOperator)) {
-                                input.push_back("0");
-                            }
-
-                            if (lastElement == "Invalid expression" || lastElement == "Error") { // if "Invalid expression" or "Error" is being shown and another button is clicked, first clear the input box
-                                input.clear();
-                            }
-
-                            //In the case that the program was expecting a negative number as the first operand but other operators are provided instead, clear the input box
-                            if (lastElement == "-" && input.size() == 1 && (key == "divide" || key == "multiply" || key == "add")) {
-                                input.clear();
-                            }
-
-                            if ((key == "divide" || key == "multiply" || key == "add") && input.size() < 1 ) {/*Prohibit an operator
-                                being provided as the first value in the input box*/
-                                input.clear();
-                            } else if (lastElement == "*" && value == "-") { //Allow the minus operator to follow the multiplication operator
-                                req->session()->insert("multiAndMinus", true);
-                                input.push_back(value);
-                            } else if (secondLastMultiply && lastElement == "-" && (key == "divide" || key == "multiply" || key == "add")) { /*If any operator comes immediately after
-                                a multiplication sign and a minus sign, remove the latter two and insert that operator into the input box */
-                                if (input.size() >= 2) {
-                                    //input.assign(input.begin(), input.begin()+ input.size()-2);
-                                    input.pop_back();
-                                    input.pop_back();
-                                    input.push_back(value);
-                                }
-                            } else if ((key == "divide" || key == "multiply" || key == "add" || key == "minus") && lastElementOperator) { //Prevent two operators from following each other
-                                    if (input.size() > 0) {
-                                        input.assign(input.begin(), input.begin() + input.size() - 1);
+                                req->session()->erase("resultDisplayed");
+                                req->session()->insert("resultDisplayed", false);
+                                req->session()->erase("isOperator");
+                                req->session()->insert("isOperator", false);
+                                req->session()->erase("multiAndMinus");
+                        } else if (key == "delete") { // if the delete button has been clicked
+                                if (input.size() > 0) {
+                                    if (lastElementOperator) {
+                                        lastElementOperator = false;
                                     }
-                                    input.push_back(value);
-                            } else if (req->getSession()->get<bool>("resultDisplayed") == true) { /*If any number is clicked while the input box is displaying an
-                                    answer, erase and start inserting values afresh */
-                                    input.clear();
-                                    input.push_back(value);
-                                    req->session()->erase("resultDisplayed");
-                                    req->session()->insert("resultDisplayed", false);
-                            } else if (((periodInInputFunc(input) && !foundOperatorFunc(input)) || periodInLastOperand(input)) && key == "period") { //Prevent any operand from having more than one period
-                                    input = input;
-                            } else { //Add the value of the clicked button to the input array
-                                    input.push_back(value);
-                            }
-                    }
-                }
-                // redirect to the root url
-                auto resp = HttpResponse::newRedirectionResponse("/");
-                callback(resp);
-            },
-            {Post}); //Using POST method for this function
+                                    if (lastElementOperator && req->getSession()->get<bool>("multiAndMinus") == true) {
+                                        req->session()->erase("multiAndMinus");
+                                    }
+                                    input.pop_back();
+                                }
+                                req->session()->erase("resultDisplayed");
+                                req->session()->insert("resultDisplayed", false);
+                                req->session()->erase("isOperator");
+                                req->session()->insert("isOperator", false);
+                        } else { // for any other button clicked
+                                std::string lastElement;
+                                int secondLastElement = -1;
+                                if (input.size() > 0) {
+                                    lastElement = input.back(); //get the last element in the input vector
+                                    if (isSpecialCharacter(lastElement)) { // check if the last element in the input vector is an operator
+                                        lastElementOperator = true;
+                                    }
+                                }
+                                
+                                if (input.size() > 2) { //get the index of the second last element
+                                    secondLastElement = input.size() - 2;
+                                }
 
-    LOG_INFO << "Server running on 0.0.0.0:8080"; //Display in the terminal the program's address and port while running
-    
-    //Set HTTP listener address and port and run the HTTP framework
-    app()
-        // All sessions are stored for 24 Hours
-        .enableSession(24h)
-        .addListener("0.0.0.0", 8080)
-        .run();
+                                bool secondLastMultiply = false;
+                                //check if the second last element is a multiplication symbol
+                                if (secondLastElement != -1 && input[secondLastElement] == "*") {
+                                    secondLastMultiply = true;
+                                }
+
+                                //If the period button has been clicked and there is no number preceeding it, append a zero before the period
+                                if (key == "period" && (input.size() < 1 || lastElementOperator)) {
+                                    input.push_back("0");
+                                }
+
+                                if (lastElement == "Invalid expression" || lastElement == "Error") { // if "Invalid expression" or "Error" is being shown and another button is clicked, first clear the input box
+                                    input.clear();
+                                }
+
+                                //In the case that the program was expecting a negative number as the first operand but other operators are provided instead, clear the input box
+                                if (lastElement == "-" && input.size() == 1 && (key == "divide" || key == "multiply" || key == "add")) {
+                                    input.clear();
+                                }
+
+                                if ((key == "divide" || key == "multiply" || key == "add") && input.size() < 1 ) {/*Prohibit an operator
+                                    being provided as the first value in the input box*/
+                                    input.clear();
+                                } else if (lastElement == "*" && value == "-") { //Allow the minus operator to follow the multiplication operator
+                                    req->session()->insert("multiAndMinus", true);
+                                    input.push_back(value);
+                                } else if (secondLastMultiply && lastElement == "-" && (key == "divide" || key == "multiply" || key == "add")) { /*If any operator comes immediately after
+                                    a multiplication sign and a minus sign, remove the latter two and insert that operator into the input box */
+                                    if (input.size() >= 2) {
+                                        //input.assign(input.begin(), input.begin()+ input.size()-2);
+                                        input.pop_back();
+                                        input.pop_back();
+                                        input.push_back(value);
+                                    }
+                                } else if ((key == "divide" || key == "multiply" || key == "add" || key == "minus") && lastElementOperator) { //Prevent two operators from following each other
+                                        if (input.size() > 0) {
+                                            input.assign(input.begin(), input.begin() + input.size() - 1);
+                                        }
+                                        input.push_back(value);
+                                } else if (req->getSession()->get<bool>("resultDisplayed") == true) { /*If any number is clicked while the input box is displaying an
+                                        answer, erase and start inserting values afresh */
+                                        input.clear();
+                                        input.push_back(value);
+                                        req->session()->erase("resultDisplayed");
+                                        req->session()->insert("resultDisplayed", false);
+                                } else if (((periodInInputFunc(input) && !foundOperatorFunc(input)) || periodInLastOperand(input)) && key == "period") { //Prevent any operand from having more than one period
+                                        input = input;
+                                } else { //Add the value of the clicked button to the input array
+                                        input.push_back(value);
+                                }
+                        }
+                    }
+                    // redirect to the root url
+                    auto resp = HttpResponse::newRedirectionResponse("/");
+                    callback(resp);
+                },
+                {Post}); //Using POST method for this function
+
+        LOG_INFO << "Server running on 0.0.0.0:8080"; //Display in the terminal the program's address and port while running
+        
+        //Set HTTP listener address and port and run the HTTP framework
+        app()
+            // All sessions are stored for 24 Hours
+            .enableSession(24h)
+            .addListener("0.0.0.0", 8080)
+            .run();
+    } catch (const std::exception& e) {
+        std::cerr << "Caught exception: " << e.what() << std::endl;
+        //input.clear();
+        //input.push_back("Error");
+        //auto resp = HttpResponse::newRedirectionResponse("/");
+        //callback(resp);
+        //return;
+    }
 }
