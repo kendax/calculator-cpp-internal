@@ -620,8 +620,8 @@ int main()
             .enableSession(24h)
             .addListener("0.0.0.0", 8080)
             .run();
-    } catch (const std::exception& e) {
-        std::cerr << "Caught exception: " << e.what() << std::endl;
+    } catch (...) {
+        std::cerr << "Caught exception!" << std::endl;
         //input.clear();
         //input.push_back("Error");
         //auto resp = HttpResponse::newRedirectionResponse("/");
