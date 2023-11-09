@@ -470,7 +470,7 @@ int main()
                             req->session()->insert("resultDisplayed", true);
                         }
                     } else if (key == "equals") { //if the equals button has been clicked
-                                if (lastElementOperator) {
+                                if (isSpecialCharacter(input.back())) {
                                     input.clear();
                                     input.push_back("Error");
                                     auto resp = HttpResponse::newRedirectionResponse("/");
